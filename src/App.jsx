@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import Header from './components/Header';
 import Homepage from './Homepage';
-import WelcomePage from './components/WelcomePage';
+
 
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [audioStream, setAudioStream] = useState();
+
+function handleResetAudio() {
+  setAudioStream(null)
+}
 
   return (
     
       <div>
         <Header />
-        <WelcomePage />
+        <Homepage setAudioStream={setAudioStream}/>
         </div>
   )
 }
