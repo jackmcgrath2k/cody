@@ -3,7 +3,7 @@ import MicIcon from '@mui/icons-material/Mic';
 
 
 export default function Homepage(props) {
-  const { setAudioStream } = props
+  const { setAudioStream, setFile } = props
 
   const [recordingStatus, setRecordingStatus] = useState('inactive')
   const [audioChunks, setAudioChunks] = useState([])
