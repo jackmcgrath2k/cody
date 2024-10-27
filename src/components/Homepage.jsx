@@ -1,98 +1,92 @@
-import React, {useState, useEffect, useRef} from 'react'
-import MicIcon from '@mui/icons-material/Mic';
-
+import React, { useState, useEffect } from 'react';
 
 export default function Homepage(props) {
-  const { setAudioStream, setFile } = props
+  const { setAudioStream, setFile } = props;
+  const [isRecording, setIsRecording] = useState(false); // Tracks recording state
+  const [transcription, setTranscription] = useState(""); // Stores latest transcription
+  const [transcriptions, setTranscriptions] = useState([]); // Stores all transcriptions
 
-  const [recordingStatus, setRecordingStatus] = useState('inactive')
-  const [audioChunks, setAudioChunks] = useState([])
-  const [duration, setDuration] = useState(0)
-
-  const mediaRecorder = useRef(null)
-
-  const mimeType = 'audio/webm'
-
-  //Start recording
-  async function startRecording() {
-    let tempStream
-
-    console.log('Start recording')
-
-    //user micorphone access, no video
+  // Start recording
+  const startRecording = async () => {
     try {
-      const streamData = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false
-      })
-      tempStream=streamData
-    } 
-    
-    catch (err) {
-      console.log(err.message)
-      return
+      const response = await fetch("http://localhost:8000/start", { method: "POST" });
+      const data = await response.json();
+      if (response.ok) {
+        setIsRecording(true);
+        console.log(data.message); // "Recording started"
+      } else {
+        console.error(data.message);
+      }
+    } catch (error) {
+      console.error("Failed to start recording:", error);
     }
+  };
 
-    setRecordingStatus('recording')
-    //make new media recorder instance using the stream
-    const media = new MediaRecorder(tempStream, {type: mimeType})
-    mediaRecorder.current = media
-
-    mediaRecorder.current.start()
-    let localAudioChunks = []
-    mediaRecorder.current.ondataavailable = (event) => {
-      if(typeof event.data === 'undefined') {return}
-      if(event.data.size === 0) {return}
-      localAudioChunks.push(event.data)
+  // Stop recording
+  const stopRecording = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/stop", { method: "POST" });
+      const data = await response.json();
+      if (response.ok) {
+        setIsRecording(false);
+        setTranscription(data.transcription); // Update transcription with the latest one
+        console.log(data.message); // "Recording stopped"
+        // Fetch all transcriptions after stopping recording
+        fetchTranscriptions();
+      } else {
+        console.error(data.message);
+      }
+    } catch (error) {
+      console.error("Failed to stop recording:", error);
     }
-    setAudioChunks(localAudioChunks)
-  }
+  };
 
-  //Stop recording
-  async function stopRecording() {
-    setRecordingStatus('inactive')
-    console.log('stop recording')
-
-    mediaRecorder.current.stop()
-    mediaRecorder.current.onstop = () => {
-      const audioBlob = new Blob(audioChunks, {type: mimeType})
-      setAudioStream(audioBlob)
-      setAudioChunks([])
-      setDuration(0)
+  // Fetch all transcriptions
+  const fetchTranscriptions = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/transcriptions');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      console.log(data); // Debug: Log the fetched data
+      setTranscriptions(data.transcriptions || []); // Ensure this matches your API's response structure
+    } catch (error) {
+      console.error('Error fetching transcriptions:', error);
     }
+  };
 
-  }
-
-  //recording timer | === checks for value and type, == only checks one, dont make that mistake again
   useEffect(() => {
-if (recordingStatus === 'inactive') {return}
-
-const interval = setInterval(() => {
-  setDuration(curr => curr + 1)
-}, 1000)
-
-return () => clearInterval(interval)
-  })
+    fetchTranscriptions(); // Fetch existing transcriptions on component mount
+  }, []);
 
   return (
-<div>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h1>Real-Time Transcription</h1>
+      <button onClick={startRecording} disabled={isRecording} style={{ padding: "10px 20px", margin: "10px" }}>
+        Start Recording
+      </button>
+      <button onClick={stopRecording} disabled={!isRecording} style={{ padding: "10px 20px", margin: "10px" }}>
+        Stop Recording
+      </button>
 
-    <div className='text-center'>
-        <MicIcon className={'cursor-pointer' + (recordingStatus === 'recording'? 'tet-red-500' : '')} fontSize="medium"/>
-        
-        
-        <div>
-        <button onClick={recordingStatus === 'recording' ? stopRecording : startRecording} className='text-center border border-black rounded-lg p-3'>
-    <span>{recordingStatus === 'inactive' ? 'Record' : 'Stop Recording'}</span>
-    {duration !== 0 && (
-        <span>{duration}s</span>
-    )}
-</button>
+      <div style={{ marginTop: "30px", textAlign: "left", maxWidth: "600px", margin: "0 auto" }}>
+        <h2>Latest Transcription:</h2>
+        <p>{transcription ? transcription : "No transcription available yet."}</p>
+      </div>
 
-        </div>
-
-
+      <div style={{ marginTop: "30px", textAlign: "left", maxWidth: "600px", margin: "0 auto" }}>
+        <h2>All Transcriptions:</h2>
+        <ul>
+          {transcriptions.length > 0 ? (
+            transcriptions.map((t, index) => (
+              <li key={index}>{t}</li>
+            ))
+          ) : (
+            <li>No transcriptions available.</li>
+          )}
+        </ul>
+      </div>
     </div>
-</div>
-  )
+  );
 }
