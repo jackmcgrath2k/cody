@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import ClearSharpIcon from '@mui/icons-material/ClearSharp';
+import EditSharpIcon from '@mui/icons-material/EditSharp';
+import FolderSharedSharpIcon from '@mui/icons-material/FolderSharedSharp';
 
-export default function Homepage(props) {
-  const { setAudioStream, setFile } = props;
+export default function Homepage() {
   const [isRecording, setIsRecording] = useState(false); // Tracks recording state
   const [transcription, setTranscription] = useState(""); // Stores latest transcription
   const [transcriptions, setTranscriptions] = useState([]); // Stores all transcriptions
@@ -29,9 +31,9 @@ export default function Homepage(props) {
       const data = await response.json();
       if (response.ok) {
         setIsRecording(false);
-        setTranscription(data.transcription); // Update transcription with the latest one
+        setTranscription(data.transcription); // update transcription with the latest one
         console.log(data.message); // "Recording stopped"
-        // Fetch all transcriptions after stopping recording
+        // fetch all transcriptions after stopping recording
         fetchTranscriptions();
       } else {
         console.error(data.message);
@@ -49,15 +51,15 @@ export default function Homepage(props) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      console.log(data); // Debug: Log the fetched data
-      setTranscriptions(data.transcriptions || []); // Ensure this matches your API's response structure
+      console.log(data); // log fetched data
+      setTranscriptions(data.transcriptions || []); 
     } catch (error) {
       console.error('Error fetching transcriptions:', error);
     }
   };
 
   useEffect(() => {
-    fetchTranscriptions(); // Fetch existing transcriptions on component mount
+    fetchTranscriptions(); // fetch transcripts
   }, []);
 
   return (
@@ -79,11 +81,29 @@ export default function Homepage(props) {
         <h2>All Transcriptions:</h2>
         <ul>
           {transcriptions.length > 0 ? (
-            transcriptions.map((t, index) => (
-              <li key={index}>{t}</li>
+            transcriptions.map((t) => (
+              <li key={t.id}>
+                <p>{t.text}</p>
+                <p className='text-gray-400 font-light'>{t.timestamp}</p>
+              </li>
             ))
           ) : (
-            <li>No transcriptions available.</li>
+            
+<div className="block max-w-xs bg-white border border-black">
+<div className="w-full bg-black text-white font-bold pb-1 text-end  flex items-center justify-between">
+<p className='text-white font-black text-start p-1 text-xs'>
+    Cody
+  </p>
+  <div className="flex items-center space-x-2 pr-1">
+<FolderSharedSharpIcon fontSize="xs"/>
+<EditSharpIcon fontSize="xs"/>
+<ClearSharpIcon fontSize="xs"/>
+</div>
+  </div>
+<p className="m-2 text-black tracking-tight">This is really, really cool and I'm really excited to design a UI for this.</p>
+<div><p className='text-gray-400 font-light text-end px-1 text-xs'>2024-10-28 21:11</p></div>
+</div>
+
           )}
         </ul>
       </div>

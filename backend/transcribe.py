@@ -7,6 +7,7 @@ import numpy as np # use for raw audio data
 import pyaudio
 import time
 import os
+import json
 
 # set up fastapi and allow front end requests
 app = FastAPI()
@@ -28,7 +29,7 @@ logging.basicConfig(level=logging.INFO)
 model_size = "small.en"  # or "small"
 model = WhisperModel(model_size, device="cpu", compute_type="int8")
 
-
+# initialize audio and set all to blank
 p = pyaudio.PyAudio()
 stream = None 
 is_recording = False
@@ -48,16 +49,16 @@ def transcribe_chunk(model, audio_data):
     return transcription.strip() # get rd of any whitespaces
 
 #records
-def record_chunk(stream, chunk_length=3): #chunk every 3 seconds
+def record_chunk(stream, chunk_length=10): #chunk every 10 seconds
     frames = []
     for _ in range(0, int(16000 / 1024 * chunk_length)):
         data = stream.read(1024)
         frames.append(data)
-    return b''.join(frames)
+    return b''.join(frames) # join chunks recorded into a string
 
 def main():
     global is_recording, stream, p, accumulated_transcription
-    stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024)
+    stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024) # 16000hz mono audio settings
 
     try:
         while is_recording:
@@ -85,7 +86,7 @@ def start_recording():
         return JSONResponse(content={"message": "Recording already in progress"}, status_code=400)
 
     is_recording = True
-    accumulated_transcription = ""  # Reset transcription for new session
+    accumulated_transcription = ""  # reset transcription for new session
     recording_thread = threading.Thread(target=main)
     recording_thread.start()
     return JSONResponse(content={"message": "Recording started"}, status_code=200)
@@ -97,29 +98,45 @@ def stop_recording():
     if not is_recording:
         return JSONResponse(content={"message": "Recording is not active"}, status_code=400)
 
-    # Stop the recording
+    # stop the recording
     is_recording = False
     recording_thread.join()  # Wait for the thread to finish
 
-    # Save and return the transcription
+    # save and return the transcription
     save_transcription(accumulated_transcription)
-    response = accumulated_transcription  # Store transcription in response before resetting
-    accumulated_transcription = ""  # Reset after saving
+    response = accumulated_transcription  # store transcription in response before resetting
+    accumulated_transcription = ""  # reset after saving
     return JSONResponse(content={"message": "Recording stopped", "transcription": response}, status_code=200)
 
 # file where transcriptions will be saved
-TRANSCRIPTION_FILE = "transcriptions.txt"
+TRANSCRIPTION_FILE = "transcriptions.json"
 
 # save transcription to a text file
 def save_transcription(transcription: str):
     try:
-        with open(TRANSCRIPTION_FILE, "a") as file:
-            file.write(transcription + "\n")
+        # check if the transcription file exists
+        if os.path.exists(TRANSCRIPTION_FILE):
+            with open(TRANSCRIPTION_FILE, "r") as file:
+                data = json.load(file)
+        else:
+            # initialize if the file doesn't exist
+            data = {"transcriptions": []}
+
+        # add new transcription
+        data["transcriptions"].append({
+            "id": len(data["transcriptions"]), # sequential increase of ID number in array, maybe switch to UUID->str in future
+            "text": transcription.strip(),
+            "timestamp": time.strftime("%Y-%m-%d %H:%M") 
+        })
+
+        # save back to the JSON file
+        with open(TRANSCRIPTION_FILE, "w") as file:
+            json.dump(data, file, indent=4)  # pretty-print JSON - write the transcript to the file
         logging.info("Transcription saved successfully.")
     except Exception as e:
         logging.error(f"Failed to save transcription: {e}")
 
-# Endpoint to receive transcriptions
+# save it and display
 @app.post("/transcribe")
 async def transcribe(transcription: str):
     try:
@@ -128,17 +145,18 @@ async def transcribe(transcription: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save transcription: {e}")
 
-# Endpoint to retrieve all transcriptions
+# get and display all transcriptions
 @app.get("/transcriptions")
 async def get_transcriptions():
     if not os.path.exists(TRANSCRIPTION_FILE):
         return {"transcriptions": []}  # Return an empty list if the file does not exist
 
     with open(TRANSCRIPTION_FILE, "r") as file:
-        transcriptions = file.readlines()
+        data = json.load(file)
+
+        return data  # Return the structured JSON data directly
     
-    # Strip newline characters and return
-    return {"transcriptions": [t.strip() for t in transcriptions]}
+
 
 if __name__ == "__main__":
     import uvicorn
