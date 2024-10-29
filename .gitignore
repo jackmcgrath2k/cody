@@ -26,3 +26,4 @@ dist-ssr
 # misc
 .env
 *.pyc
+/public/porcupine

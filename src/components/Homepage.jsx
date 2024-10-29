@@ -5,6 +5,36 @@ import FolderSharedSharpIcon from '@mui/icons-material/FolderSharedSharp';
 import MicRoundedIcon from '@mui/icons-material/MicRounded';
 import StopIcon from '@mui/icons-material/Stop';
 
+// Toggle mic for wake word
+const ToggleSwitch = () => {
+  const [isChecked, setIsChecked] = useState(false);
+
+  const handleToggle = () => {
+    setIsChecked(!isChecked);
+  };
+
+  return (
+    <label className="inline-flex items-center cursor-pointer">
+      <input
+        type="checkbox"
+        value=""
+        className="sr-only peer"
+        checked={isChecked}
+        onChange={handleToggle}
+      />
+      <div className={`relative w-9 h-5 rounded-full transition-colors duration-300 ease-in-out ${isChecked ? 'bg-red-600 ' : 'bg-gray-300'}`}>
+        <span
+          className={`absolute top-[2px] left-[2px] bg-white border border-gray-300 rounded-full h-4 w-4 transition-transform duration-200 ease-in-out transform ${ isChecked ? 'translate-x-full border-white' : '' }`}
+        />
+      </div>
+      <span className="ms-3 text-sm font-medium text-gray-900">Mic</span>
+    </label>
+  );
+};
+
+
+
+
 export default function Homepage() {
   const [isRecording, setIsRecording] = useState(false); // Tracks recording state
   const [transcription, setTranscription] = useState(""); // Stores latest transcription
@@ -66,6 +96,9 @@ export default function Homepage() {
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
+
+
+
       <button className='text-gray-600 hover:text-gray-700' onClick={startRecording} disabled={isRecording} style={{ padding: "10px 20px", margin: "10px" }}>
         <MicRoundedIcon />
       </button>
@@ -74,6 +107,7 @@ export default function Homepage() {
       </button>
 
         <h1 className='font-light'>All Transcriptions:</h1>
+        <ToggleSwitch />
         <div className="flex justify-center">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-10 gap-y-6 p-4 relative">
           {transcriptions.length > 0 ? (
