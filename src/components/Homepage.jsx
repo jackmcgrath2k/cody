@@ -4,41 +4,66 @@ import EditSharpIcon from '@mui/icons-material/EditSharp';
 import FolderSharedSharpIcon from '@mui/icons-material/FolderSharedSharp';
 import MicRoundedIcon from '@mui/icons-material/MicRounded';
 import StopIcon from '@mui/icons-material/Stop';
-
-// Toggle mic for wake word
-const ToggleSwitch = () => {
-  const [isChecked, setIsChecked] = useState(false);
-
-  const handleToggle = () => {
-    setIsChecked(!isChecked);
-  };
-
-  return (
-    <label className="inline-flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        value=""
-        className="sr-only peer"
-        checked={isChecked}
-        onChange={handleToggle}
-      />
-      <div className={`relative w-9 h-5 rounded-full transition-colors duration-300 ease-in-out ${isChecked ? 'bg-red-600 ' : 'bg-gray-300'}`}>
-        <span
-          className={`absolute top-[2px] left-[2px] bg-white border border-gray-300 rounded-full h-4 w-4 transition-transform duration-200 ease-in-out transform ${ isChecked ? 'translate-x-full border-white' : '' }`}
-        />
-      </div>
-      <span className="ms-3 text-sm font-medium text-gray-900">Mic</span>
-    </label>
-  );
-};
-
-
+import heycodykeyword from "/public/porcupine/hey_cody";
+import modelParams from "/public/porcupine/porcupine_params";
+import { usePorcupine } from "@picovoice/porcupine-react";
 
 
 export default function Homepage() {
   const [isRecording, setIsRecording] = useState(false); // Tracks recording state
   const [transcription, setTranscription] = useState(""); // Stores latest transcription
   const [transcriptions, setTranscriptions] = useState([]); // Stores all transcriptions
+  const [isMicAccessGranted, setIsMicAccessGranted] = useState(false);
+  const {
+    keywordDetection,
+    init,
+    start,
+    stop,
+  } = usePorcupine();
+
+
+  const porcupineKeyword = {
+    base64: heycodykeyword,
+    label: "Hey Cody"
+  };
+
+  const porcupineModel = {
+    base64: modelParams
+  };
+
+  const requestMicrophoneAccess = async () => {
+    try {
+      const accessKey = import.meta.env.VITE_ACCESS_KEY;
+      await init(accessKey, porcupineKeyword, porcupineModel);
+      setIsMicAccessGranted(true);
+      start(); // start listening for wake word
+      console.log("Microphone access granted, started listening for wake word.");
+    } catch (error) {
+      console.error("Microphone access denied", error);
+    }
+  };
+
+  // wake  mic on/off
+  const toggleMicrophone = () => {
+    if (!isMicAccessGranted) {
+      requestMicrophoneAccess();
+    } else {
+      stop(); // stop listening for wake word
+      setIsMicAccessGranted(false); // switch mic access
+      console.log("Stopped listening for wake word.");
+    }
+  };
+  useEffect(() => {
+    if (keywordDetection !== null) {
+      startRecording(); // start recording on wake word detection
+
+      // stop recording after 10 sec
+      setTimeout(() => {
+        stopRecording(); // stop recording
+        stop(); // stop listening for wake word
+      }, 10000); // 10 seconds
+    }
+  }, [keywordDetection]);
 
   // Start recording
   const startRecording = async () => {
@@ -107,7 +132,12 @@ export default function Homepage() {
       </button>
 
         <h1 className='font-light'>All Transcriptions:</h1>
-        <ToggleSwitch />
+        <button 
+        onClick={toggleMicrophone} 
+        className={`p-2 rounded ${isMicAccessGranted ? 'bg-red-600 text-white' : 'bg-gray-400 text-black'}`}
+      >
+        {isMicAccessGranted ? "Mic On" : "Mic Off"}
+      </button>
         <div className="flex justify-center">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-10 gap-y-6 p-4 relative">
           {transcriptions.length > 0 ? (
