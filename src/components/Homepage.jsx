@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ClearSharpIcon from '@mui/icons-material/ClearSharp';
 import EditSharpIcon from '@mui/icons-material/EditSharp';
 import FolderSharedSharpIcon from '@mui/icons-material/FolderSharedSharp';
+import MicRoundedIcon from '@mui/icons-material/MicRounded';
+import StopIcon from '@mui/icons-material/Stop';
 
 export default function Homepage() {
   const [isRecording, setIsRecording] = useState(false); // Tracks recording state
@@ -64,11 +66,11 @@ export default function Homepage() {
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <button onClick={startRecording} disabled={isRecording} style={{ padding: "10px 20px", margin: "10px" }}>
-        Start Recording
+      <button className='text-gray-600 hover:text-gray-700' onClick={startRecording} disabled={isRecording} style={{ padding: "10px 20px", margin: "10px" }}>
+        <MicRoundedIcon />
       </button>
-      <button onClick={stopRecording} disabled={!isRecording} style={{ padding: "10px 20px", margin: "10px" }}>
-        Stop Recording
+      <button className='text-gray-600 hover:text-gray-700' onClick={stopRecording} disabled={!isRecording} style={{ padding: "10px 20px", margin: "10px" }}>
+        <StopIcon />
       </button>
 
         <h1 className='font-light'>All Transcriptions:</h1>
@@ -98,9 +100,9 @@ export default function Homepage() {
             
             ))
           ) : (
-            
-            <h1 className='text-3xl tracking-tight font-bold'>No transcriptions are available.</h1>
-
+            <div className="absolute inset-0 flex justify-center mt-20">
+            <h1 className='sm:text-4xl md:text-5xl lg:text-7xl tracking-tight font-bold'>No transcriptions are available.</h1>
+            </div>
           )}
         </div>
         </div>

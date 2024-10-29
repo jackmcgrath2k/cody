@@ -1,6 +1,7 @@
 import React from 'react';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import GroupIcon from '@mui/icons-material/Group';
+import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 
 export default function Header() {
   return (
