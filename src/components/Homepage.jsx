@@ -64,7 +64,6 @@ export default function Homepage() {
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Real-Time Transcription</h1>
       <button onClick={startRecording} disabled={isRecording} style={{ padding: "10px 20px", margin: "10px" }}>
         Start Recording
       </button>
@@ -72,41 +71,39 @@ export default function Homepage() {
         Stop Recording
       </button>
 
-      <div style={{ marginTop: "30px", textAlign: "left", maxWidth: "600px", margin: "0 auto" }}>
-        <h2>Latest Transcription:</h2>
-        <p>{transcription ? transcription : "No transcription available yet."}</p>
-      </div>
-
-      <div style={{ marginTop: "30px", textAlign: "left", maxWidth: "600px", margin: "0 auto" }}>
-        <h2>All Transcriptions:</h2>
-        <ul>
+        <h1 className='font-light'>All Transcriptions:</h1>
+        <div className="flex justify-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-10 gap-y-6 p-4 relative">
           {transcriptions.length > 0 ? (
             transcriptions.map((t) => (
-              <li key={t.id}>
-                <p>{t.text}</p>
-                <p className='text-gray-400 font-light'>{t.timestamp}</p>
-              </li>
+              <div key={t.id} className="flex flex-col justify-center">
+                {/* card design */}
+                  <div className="block max-w-xs bg-white border border-black min-h-[150px] min-w-[150px] md:min-h-[200px] md:min-w-[200px] lg:min-h-[250px] lg:min-w-[250px] relative">
+                  <div className="w-full bg-black text-white font-bold pb-1 text-end  flex items-center justify-between">
+                  <p className='text-white font-black text-start p-1 text-xs'>
+                      Cody
+                    </p>
+                    <div className="flex items-center space-x-2 pr-1">
+                  <FolderSharedSharpIcon fontSize="xs"/> {/* share transcript with friend  - different color for friends scripts? */}
+                  <EditSharpIcon fontSize="xs"/>  {/* edit transcript */}
+                  <ClearSharpIcon fontSize="xs"/> {/* delete transcript - add a warning popup */}
+                  </div>
+                    </div>
+                    <div className='text-left p-1'>
+                  <p className="m-2 text-black tracking-tight font-normal">{t.text}</p>
+                 
+                    <p className='text-gray-400 font-light text-end px-1 text-xs absolute bottom-1 right-1'>{t.timestamp}</p></div>
+                  </div>
+              </div>
+            
             ))
           ) : (
             
-<div className="block max-w-xs bg-white border border-black">
-<div className="w-full bg-black text-white font-bold pb-1 text-end  flex items-center justify-between">
-<p className='text-white font-black text-start p-1 text-xs'>
-    Cody
-  </p>
-  <div className="flex items-center space-x-2 pr-1">
-<FolderSharedSharpIcon fontSize="xs"/>
-<EditSharpIcon fontSize="xs"/>
-<ClearSharpIcon fontSize="xs"/>
-</div>
-  </div>
-<p className="m-2 text-black tracking-tight">This is really, really cool and I'm really excited to design a UI for this.</p>
-<div><p className='text-gray-400 font-light text-end px-1 text-xs'>2024-10-28 21:11</p></div>
-</div>
+            <h1 className='text-3xl tracking-tight font-bold'>No transcriptions are available.</h1>
 
           )}
-        </ul>
-      </div>
+        </div>
+        </div>
     </div>
   );
 }
